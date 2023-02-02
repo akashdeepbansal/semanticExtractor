@@ -6,7 +6,7 @@ const fs = require("fs");
 // const test = require('node:test');
 const assert = require('assert');
 const winkNLP = require("wink-nlp");
-const model = require("../../node_modules/wink-eng-lite-web-model/dist/model.js");
+const model = require("./node_modules/wink-eng-lite-web-model/dist/model.js");
 const nlp = winkNLP(model);
 const its = nlp.its;
 
@@ -189,22 +189,22 @@ function readJSONFile(path) {
  * Reading the annotated files.
  */
 function loadData() {
-  let data1 = readJSONFile("../../data/data_annotated_set.json");
+  let data1 = readJSONFile("./data/data_annotated_set.json");
   let data2 = readJSONFile(
-    "../../data/data_annotated_Integer Equivalence Classes and Symmetries.json"
+    "./data/data_annotated_Integer Equivalence Classes and Symmetries.json"
   );
-  let data3 = readJSONFile("../../data/data_annotated_induction.json");
-  let data4 = readJSONFile("../../data/data_annotated_divisionAlgo.json");
+  let data3 = readJSONFile("./data/data_annotated_induction.json");
+  let data4 = readJSONFile("./data/data_annotated_divisionAlgo.json");
 
   return data1.concat(data2).concat(data3).concat(data4);
 }
 
 // Reading and combining rawData
 function loadRawData() {
-  let rawData1 = readJSONFile("../../data/rawData_set.json");
-  let rawData2 = readJSONFile("../../data/rawData_integers.json");
-  let rawData3 = readJSONFile("../../data/rawData_induction.json");
-  let rawData4 = readJSONFile("../../data/rawData_divisionAlgo.json");
+  let rawData1 = readJSONFile("./data/rawData_set.json");
+  let rawData2 = readJSONFile("./data/rawData_integers.json");
+  let rawData3 = readJSONFile("./data/rawData_induction.json");
+  let rawData4 = readJSONFile("./data/rawData_divisionAlgo.json");
   
   return rawData1.concat(rawData2).concat(rawData3).concat(rawData4);
 }
