@@ -1,0 +1,279 @@
+[
+  {
+    "name": "preprocess1",
+    "precondition": [],
+    "action": [
+      ["phrase", ["one-to-one", "gi"], "onetoone"]
+    ],
+    "comment": "replace one-to-one  y onetoone"
+  },
+  {
+    "name": "preprocess2",
+    "precondition": [],
+    "action": [
+      ["phrase", "(MATH\\s*(,|(, )?(and|or))\\s+)*CENTERMATH(\\s*(,|(, )?(and|or))\\s+MATH)*", "CENTERMATH"],
+      ["phrase", "(MATH\\s*(,|(, )?(and|or))?\\s)+MATH", "MATH"]
+    ],
+    "comment": "Replace adjecent multiple MATH elements with single MATH element. If one of them is CENTERMATH, then it will be replaced by CENTERMATH."
+  },
+  {
+    "name": "preprocess3",
+    "precondition": [],
+    "action": [
+      ["phrase", ["\\'s", "gi"], ""]
+    ],
+    "comment": "remove 's"
+  },
+  {
+    "name": "rule1",
+    "precondition": [],
+    "action": [
+      ["pattern", ["((ADJ|NOUN),?)+", "g"], "NP,"]
+    ],
+    "comment": "replace ((ADJ|NOUN),)+ with NP (Noun phrase)."
+  },
+  {
+    "name": "rule2",
+    "precondition": [],
+    "action": [
+      ["pattern", ["(DET),?", "g"], ""]
+    ],
+    "comment": "removing DET (determiner) as not found them to be useful."
+  },
+  {
+    "name": "rule3",
+    "precondition": [],
+    "action": [
+      ["pattern",["(NP\\d),CCONJ,(PART,)?NP\\d", "g"], "$1"]
+    ],
+    "comment": "merging multiple definitions seperated by CCONJ into one. e.g., mapping and function"
+  },
+  {
+    "name": "rule4a",
+    "precondition": [
+      ["pattern", "^.*(?<!(NP.*))ELEMENT"]
+    ],
+    "action": [
+      ["pattern", "^.*(?<!(NP.*))ELEMENT", "DCARE,ELEMENT"]
+    ],
+    "comment": "remove prefix if NP is not present"
+  },
+  {
+    "name": "rule4b",
+    "precondition": [
+      ["pattern", "ELEMENT(?!(.*NP)).*$"]
+    ],
+    "action": [
+      ["pattern", "ELEMENT(?!(.*NP)).*$", "ELEMENT,DCARE"]
+    ],
+    "comment": "remove postfix if NP is not present"
+  },
+  {
+    "name": "rule5a",
+    "precondition": [
+      ["phrase", ["CENTERMATH\\s*(,|is|are)\\W*(called|said)", "i"]]
+    ],
+    "action": [
+      ["pattern", "ELEMENT,(PUNCT|AUX),VERB.*(PART,)?(NP\\d).*$", "ELEMENT,DCARE,$2$3,DCARE"]
+    ],
+    "comment": "If CENTERMATH followed by ,|is|are followed by called|define|said thenNP followed by the above scenerio is a potential definition."
+  },
+  {
+    "name": "rule5b",
+    "precondition": [
+      ["phrase", "to define\\s+CENTERMATH\\s*,"]
+    ],
+    "action": [
+      ["pattern", "ELEMENT,PUNCT", "ELEMENT,DCARE"]
+    ],
+    "comment": "Handling punctuation followed by CENTERMATH: Scenario 2: ELEMENT,PUNCT.* replace with ELEMENT,DCARE"
+  },
+  {
+    "name": "rule5c",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT(.*?)PUNCT.*", "ELEMENT$1DCARE"]
+    ],
+    "comment": "Handling punctuation followed by CENTERMATH: Scenario 3: ELEMENT(.*?)PUNCT.* replace with ELEMENT$1DCARE"
+  },
+  {
+    "name": "rule6a",
+    "precondition": [
+      ["pattern", "PUNCT.*ELEMENT"],
+      ["phrase", ["[,;]\\s+(written|denoted by|say|that is,|i\\.e\\.,)\\s+CENTERMATH", "i"]]
+    ],
+    "action": [
+      ["pattern", "PUNCT.*ELEMENT", "DCARE,ELEMENT"]
+    ],
+    "comment": "Handling scenarios where comma is present in the prefix: scenerio 1: PUNCT(comma),ELEMENT -- definition is present in the prefix, postfix can be removed"
+  },
+  {
+    "name": "rule6b",
+    "precondition": [
+      ["pattern", "PUNCT.*ELEMENT"]
+    ],
+    "action": [
+      ["pattern", "PUNCT,ELEMENT", "DCARE,ELEMENT"],
+      ["pattern", [".*PUNCT(.*)ELEMENT", "g"], "DCARE$1ELEMENT"]
+    ],
+    "comment": "Handling scenarios where comma is present in the prefix: scenerio 2: PUNCT(comma),VERB(written),ELEMENT -- definition present before comma, postfix can be removed, scenerio3: PUNCT(comma),.*(other than above 2 scenerios),ELEMENT -- definition not present before comma."
+  },
+  {
+    "name": "rule7",
+    "precondition": [],
+    "action": [
+      ["pattern", [".*(ADV|SCONJ|CCONJ)(.*)ELEMENT", "g"], "DCARE$2ELEMENT"]
+    ],
+    "comment": "ignore anything present before the ADV/SCONJ/CCONJ in the prefix"
+  },
+  {
+    "name": "rule8",
+    "precondition": [],
+    "action": [
+      ["pattern", ["ELEMENT(.*)(SCONJ|CCONJ).*", "g"], "ELEMENT$1DCARE"]
+    ],
+    "comment": "SCONJ/CCONJ after the centerMath"
+  },
+  {
+    "name": "rule9",
+    "precondition": [],
+    "action": [
+      ["pattern", "(.*)NUM,(.*)ELEMENT", "$1$2ELEMENT"]
+    ],
+    "comment": "remove NUM in the prefix"
+  },
+  {
+    "name": "rule10",
+    "precondition":[
+      ["phrase", "(such as|by)\\s+CENTERMATH"]
+    ],
+    "action": [
+      ["pattern", "(NP\\d),(PRON,)?ADP,ELEMENT", "$1,DCARE,ELEMENT"]
+    ],
+    "comment": "(such as|by) CENTERMATH"
+  },
+  {
+    "name": "rule11",
+    "precondition": [],
+    "action": [
+      ["pattern", ".*ADP,(NP\\d),ELEMENT", "DCARE,$1,ELEMENT"],
+      ["pattern", ".*(NP\\d),ADP,(NP\\d),DCARE,ELEMENT", "DCARE,$1,ADP,$2,DCARE,ELEMENT"]
+    ],
+    "comment": "NP,ADP,NP in the prefix"
+  },
+  {
+    "name": "rule12",
+    "precondition": [],
+    "action": [
+      ["pattern", [".*(VERB|PRON|AUX)(.*)ELEMENT", "g"], "DCARE$2ELEMENT"]
+    ],
+    "comment": "Remove everything before VERB/PRON/AUX in the prefix"
+  },
+  {
+    "name": "rule13",
+    "precondition": [
+      ["phrase", "CENTERMATH\\s+for"]
+    ],
+    "action": [
+      ["pattern", "ELEMENT.*?(NP\\d,ADP,)?(NP\\d).*$", "ELEMENT,DCARE,$1$2"]
+    ],
+    "comment": "case5: centerMath followed by ADP,NUM,NP then NUM will be part of definition as well"
+  },
+  {
+    "name": "rule14r",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT,(NP\\d),ADP,NP", "ELEMENT,$1"]
+    ],
+    "comment": "ELEMENT,NP,ADP,NP replace with ELEMENT,NP"
+  },
+  {
+    "name": "rule14",
+    "precondition": [],
+    "action": [
+      ["pattern", ".*?(NP\\d)(.*)ELEMENT", "$1$2ELEMENT"],
+      ["pattern", "ELEMENT(.*)(NP\\d).*", "ELEMENT$1$2"]
+    ],
+    "comment": "If prefix contains NP, then remove everything before that. Similarly, If NP is present in the postfix, then remove everything post that."
+  },
+  {
+    "name": "rule15a",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT,AUX,(NUM,)?(NP\\d,ADP,)?(NP\\d).*$", "ELEMENT,DCARE,$2$3"]
+    ],
+    "comment": "ELEMENT,AUX,NP,ADP,NP.* --> ELEMENT,DCARE,NP,ADP,NP"
+  },
+  {
+    "name": "rule15b",
+    "precondition": [
+      ["phrase", "CENTERMATH\\s+(defines|form|to denote|that is).*$"]
+    ],
+    "action": [
+      ["pattern", "ELEMENT.*?(PART,|NP\\d,ADP,)?(NP\\d).*$", "ELEMENT,DCARE,$1$2"]
+    ],
+    "comment": "handling centerMath followed by (defines|form|to denote|that is)"
+  },
+  {
+    "name": "rule15c",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT,(?!DCARE).*ADP.*$", "ELEMENT,DCARE"]
+    ],
+    "comment": "ELEMENT,AUX,NP,ADP,NP.* --> ELEMENT,DCARE,NP,ADP,NP"
+  },
+  {
+    "name": "rule16",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT.*ADV.*$", "ELEMENT,DCARE"]
+    ],
+    "comment": "CenterMath followed by ADV -- removing entire postfix, need more examples to refine this."
+  },
+  {
+    "name": "rule17",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT.*PART,(?!NP).*$", "ELEMENT,DCARE"]
+    ],
+    "comment": "CenterMath followed by PART(?!NP) -- removing entire postfix, need more examples to refine this."
+  },
+  {
+    "name": "rule18",
+    "precondition": [
+      ["phrase", "CENTERMATH\\s+(has|have|such that)"]
+    ],
+    "action": [
+      ["pattern", "ELEMENT.*$", "ELEMENT"]
+    ],
+    "comment": "CenterMath followed by such that -- removing entire postfix"
+  },
+  {
+    "name": "rule19",
+    "precondition": [],
+    "action": [
+      ["pattern", "ELEMENT,PRON.*$", "ELEMENT,DCARE"]
+    ],
+    "comment": "ELEMENT,PRON.* --> ELEMENT,DCARE -- need more cases to refine"
+  },
+  {
+    "name": "rule20",
+    "precondition": [],
+    "action": [
+      ["pattern", ["DCARE,?", "g"], ""],
+      ["pattern", ["(^,|,$)", "g"], ""]
+    ],
+    "comment": "remove DCARE"
+  },
+  {
+    "name": "rule21",
+    "precondition": [
+      ["phrase", ["^(?!.*then).*CENTERMATH", "i"]]
+    ],
+    "action": [
+      ["pattern", "(ADP|ADV),(NP\\d),ELEMENT,AUX.*$", "$1,$2,ELEMENT"]
+    ],
+    "comment": "NP,ADP,NP in the prefix"
+  }
+
+]
